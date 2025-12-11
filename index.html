@@ -3,151 +3,94 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEOLUXcs — Mangroves Canopy Height in Costa Rica</title>
+  <title>GEOLUXcs — Mangrove Canopy Height WebGIS</title>
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <style>
-    html, body { margin: 0; height: 100%; }
+    html, body { margin: 0; padding: 0; height: 100%; }
     #map { height: 100vh; width: 100vw; }
+
     .topbar {
       position: absolute;
       left: 12px;
       top: 12px;
       z-index: 1000;
       background: rgba(255,255,255,0.95);
-      padding: 8px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      font-family: Arial, Helvetica, sans-serif;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
     }
+
     .legend {
-      background: white;
-      padding: 10px;
-      line-height: 18px;
-      color: #333;
-      font-size: 14px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-    }
-    .legend i {
-      width: 18px;
-      height: 12px;
-      display: inline-block;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    .attribution {
       position: absolute;
-      right: 12px;
-      bottom: 12px;
+      bottom: 80px;
+      left: 12px;
       z-index: 1000;
-      background: rgba(255,255,255,0.9);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 8px;
+      line-height: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
     }
-    .layer-toggle {
-      margin-top: 6px;
-    }
-    a.contact {
-      color: #0066cc;
-      text-decoration: none;
-      font-weight: 600;
+
+    .legend i {
+      width: 22px;
+      height: 14px;
+      display: inline-block;
+      margin-right: 6px;
     }
   </style>
 </head>
+
 <body>
   <div id="map"></div>
 
   <div class="topbar">
-    <div style="font-weight:700">GEOLUXcs — Mangroves Canopy Height in Costa Rica</div>
-    <div style="font-size:12px; margin-top:6px;">Interactive WebGIS derived from Google Earth Engine tiles</div>
-
-    <div class="layer-toggle" style="margin-top:8px;">
-      <label><input id="toggle-canopy" type="checkbox" checked /> Canopy Height (Tree Cover)</label>
-    </div>
-
-    <div style="margin-top:8px; font-size:13px;">
-      <a class="contact" href="mailto:contact@geoluxcs.com">pa@geoluxcs.com</a> · Custom solutions
-    </div>
+    <strong>GEOLUXcs — Canopy Height (Meta 10m)</strong><br>
+    WebGIS powered by Google Earth Engine & Leaflet
   </div>
 
-  <div id="legend" class="legend" style="position: absolute; bottom: 80px; left: 12px; z-index:1000;">
-    <div style="font-weight:700; margin-bottom:6px;">Canopy Height (m)</div>
-    <div><i style="background: blue"></i> 0 – 7.5</div>
-    <div><i style="background: green"></i> 7.5 – 15</div>
-    <div><i style="background: yellow"></i> 15 – 22.5</div>
-    <div><i style="background: red"></i> 22.5 – 30</div>
-  </div>
-
-  <div class="attribution">
-    Data: <strong>Meta / WRI Canopy Height</strong> & <strong>ESA WorldCover</strong> via Google Earth Engine · Built by GeoluxCS
+  <div class="legend">
+    <strong>Canopy Height (m)</strong><br>
+    <i style="background: blue"></i> 0 – 7.5<br>
+    <i style="background: green"></i> 7.5 – 15<br>
+    <i style="background: yellow"></i> 15 – 22.5<br>
+    <i style="background: red"></i> 22.5 – 30+
   </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // -------------------------------------------------------
-    // Map init
-    // -------------------------------------------------------
-    var map = L.map('map', { zoomControl: true }).setView([9.75, -84.0], 7);
+    // -----------------------------
+    // Initialize Map
+    // -----------------------------
+    var map = L.map('map').setView([9.7, -84.0], 8);
 
-    // Basemap (OSM)
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+    // Basemap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // -------------------------------------------------------
-    // Your Earth Engine tile layer (no token required)
-    // -------------------------------------------------------
-    var geeTileUrl = "https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/f5da067e53f2ff90cb6c8c9032c12de8-97e278f98b61b363b5a29b9645126221/tiles/{z}/{x}/{y}";
+    // -----------------------------
+    // Google Earth Engine Tile Layer
+    // -----------------------------
+    var geeTileUrl = "https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/f5da067e53f2ff90cb6c8c9032c12de8-72c18d3b3f16e8aa6384ca0437859d01/tiles/{z}/{x}/{y}";
 
     var canopyLayer = L.tileLayer(geeTileUrl, {
-      opacity: 0.9,
+      opacity: 0.95,
       maxZoom: 20,
-      attribution: "Google Earth Engine"
+      attribution: "Meta Forest Canopy Height • Google Earth Engine"
     }).addTo(map);
 
-    // Toggle canopy layer checkbox
-    var checkbox = document.getElementById('toggle-canopy');
-    checkbox.addEventListener('change', function() {
-      if (this.checked) {
-        map.addLayer(canopyLayer);
-      } else {
-        map.removeLayer(canopyLayer);
-      }
-    });
-
-    // Add scale
+    // Scale bar
     L.control.scale({ position: 'bottomright' }).addTo(map);
-
-    // Add a simple lat/lon display on mouse move
-    var coordBox = L.control({ position: 'bottomleft' });
-    coordBox.onAdd = function() {
-      var div = L.DomUtil.create('div', 'coords');
-      div.style.padding = '6px 8px';
-      div.style.background = 'rgba(255,255,255,0.9)';
-      div.style.borderRadius = '6px';
-      div.style.boxShadow = '0 1px 4px rgba(0,0,0,0.12)';
-      div.style.fontSize = '12px';
-      div.innerHTML = 'Lat: — , Lon: —';
-      return div;
-    };
-    coordBox.addTo(map);
-
-    map.on('mousemove', function(e) {
-      var div = document.querySelector('.coords');
-      div.innerHTML = 'Lat: ' + e.latlng.lat.toFixed(5) + ' , Lon: ' + e.latlng.lng.toFixed(5);
-    });
-
-    // Fit bounds to Costa Rica approximate bbox (if desired)
-    var crBounds = [[8.03, -86.33], [11.22, -82.55]];
-    // map.fitBounds(crBounds);
-
   </script>
+
 </body>
 </html>
