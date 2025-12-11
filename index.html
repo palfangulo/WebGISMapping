@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GEOLUXcs — Mangrove Canopy Height WebGIS</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100vh; width: 100vw; }
+
+    .topbar {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.95);
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+    }
+
+    .legend {
+      position: absolute;
+      bottom: 80px;
+      left: 12px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.95);
+      padding: 10px;
+      border-radius: 8px;
+      line-height: 18px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .legend i {
+      width: 22px;
+      height: 14px;
+      display: inline-block;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div class="topbar">
+    <strong>GEOLUXcs — Canopy Height (Meta 10m)</strong><br>
+    WebGIS powered by Google Earth Engine & Leaflet
+  </div>
+
+  <div class="legend">
+    <strong>Canopy Height (m)</strong><br>
+    <i style="background: blue"></i> 0 – 7.5<br>
+    <i style="background: green"></i> 7.5 – 15<br>
+    <i style="background: yellow"></i> 15 – 22.5<br>
+    <i style="background: red"></i> 22.5 – 30+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // -----------------------------
+    // Initialize Map
+    // -----------------------------
+    var map = L.map('map').setView([9.7, -84.0], 8);
+
+    // Basemap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // -----------------------------
+    // Google Earth Engine Tile Layer
+    // -----------------------------
+    var geeTileUrl = "https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/f5da067e53f2ff90cb6c8c9032c12de8-72c18d3b3f16e8aa6384ca0437859d01/tiles/{z}/{x}/{y}";
+
+    var canopyLayer = L.tileLayer(geeTileUrl, {
+      opacity: 0.95,
+      maxZoom: 20,
+      attribution: "Meta Forest Canopy Height • Google Earth Engine"
+    }).addTo(map);
+
+    // Scale bar
+    L.control.scale({ position: 'bottomright' }).addTo(map);
+  </script>
+
+</body>
+</html>
