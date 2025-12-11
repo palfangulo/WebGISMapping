@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RVI + ROI Viewer</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Earth Engine -->
+<script src="https://apis.google.com/js/api.js"></script>
+
+<style>
+  html, body { margin:0; height:100%; }
+  #map { width:100%; height:100%; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script>
+/*********************************************************
+   1. LEAFLET MAP + BASEMAP + LAYER PANEL
+**********************************************************/
+const map = L.map("map", {
+  center: [10.49, -85.50],
+  zoom: 11
+});
+
+const satellite = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  { attribution: "Esri Satellite" }
+).addTo(map);
+
+let rviLayer = null;
+let roiLayer = null;
+
+const layerControl = L.control.layers(
+  { "Satellite": satellite },
+  {},
+  { collapsed: false, position: "topright" }
+).addTo(map);
+
+
+/*********************************************************
+   2. FIXED ROI (Leaflet Lat/Lon)
+**********************************************************/
+const roiCoords = [
+  [10.543880176744038, -85.59765362456451],
+  [10.419983389530952, -85.59765362456451],
+  [10.419983389530952, -85.40676617339264],
+  [10.543880176744038, -85.40676617339264]
+];
+
+roiLayer = L.polygon(roiCoords, {
+  color: "red",
+  weight: 2,
+  fillOpacity: 0.1
+}).addTo(map);
+
+layerControl.addOverlay(roiLayer, "ROI");
+console.log("ROI added");
+
+
+/*********************************************************
+   3. EARTH ENGINE INITIALIZATION (API KEY)
+**********************************************************/
+const apiKey = "AIzaSyDeWcJ0t40_hbbupnp9tH4T8DnFX79D8r4";
+
+function initEE() {
+
+  ee.data.authenticateViaApiKey(apiKey);
+
+  ee.initialize(null, null,
+    function() {
+      console.log("Earth Engine initialized");
+      loadRVI();
+    },
+    function(err) {
+      console.error("EE initialization error:", err);
+    }
+  );
+}
+
+gapi.load("client", initEE);
+
+
+/*********************************************************
+   4. RVI LOADING FROM EARTH ENGINE
+**********************************************************/
+function loadRVI() {
+
+  // ROI geometry (long, lat format)
+  const roi = ee.Geometry.Polygon([
+    [
+      [-85.59765362456451, 10.543880176744038],
+      [-85.59765362456451, 10.419983389530952],
+      [-85.40676617339264, 10.419983389530952],
+      [-85.40676617339264, 10.543880176744038]
+    ]
+  ]);
+
+  const s1 = ee.ImageCollection("COPERNICUS/S1_GRD")
+    .filterBounds(roi)
+    .filterDate("2025-01-01", "2025-12-11")
+    .filter(ee.Filter.eq("instrumentMode", "IW"))
+    .filter(ee.Filter.eq("orbitProperties_pass", "ASCENDING"))
+    .select(["VV", "VH"]);
+
+  const rviMean = s1.map(function(img){
+    const sigma = ee.Image(10).pow(img.divide(10));
+    return sigma.expression(
+      "(4 * vh) / (vh + vv)",
+      {
+        vh: sigma.select("VH"),
+        vv: sigma.select("VV")
+      }
+    ).rename("RVI");
+  }).mean().clip(roi);
+
+  const vis = {
+    min: 0,
+    max: 1,
+    palette: ["blue", "green", "yellow"]
+  };
+
+  console.log("Requesting EE map tiles...");
+
+  rviMean.getMap(vis, function(m) {
+
+    console.log("EE tile layer metadata:", m);
+
+    rviLayer = L.tileLayer(
+      "https://earthengine.googleapis.com/map/" +
+      m.mapid + "/{z}/{x}/{y}?token=" + m.token,
+      { opacity: 0.85 }
+    );
+
+    layerControl.addOverlay(rviLayer, "RVI");
+    rviLayer.addTo(map);
+
+    console.log("RVI added to map");
+  });
+}
+
+</script>
+
+</body>
+</html>
