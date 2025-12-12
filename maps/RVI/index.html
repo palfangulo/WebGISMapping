@@ -5,13 +5,12 @@
 <title>RVI + ROI Viewer</title>
 
 <!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Leaflet GeoTIFF -->
-<script src="https://unpkg.com/georaster/dist/georaster.browserify.min.js"></script>
+<!-- georaster -->
+<script src="https://unpkg.com/georaster/dist/georaster.browser.min.js"></script>
 <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
-<script src="https://unpkg.com/plotty/build/plotty.min.js"></script>
 
 <style>
   html, body { margin:0; height:100%; }
@@ -23,10 +22,13 @@
 <div id="map"></div>
 
 <script>
-/*******************************************************
-   1. BASEMAP + MAP + LAYER CONTROL
-*******************************************************/
-const map = L.map("map", { center: [10.49, -85.50], zoom: 11 });
+/*********************************************************
+   1. MAP INITIALIZATION
+**********************************************************/
+const map = L.map("map", {
+  center: [10.49, -85.50],
+  zoom: 11
+});
 
 const satellite = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -39,13 +41,13 @@ let roiLayer = null;
 const layerControl = L.control.layers(
   { "Satellite": satellite },
   {},
-  { collapsed: false }
+  { collapsed: false, position: "topright" }
 ).addTo(map);
 
 
-/*******************************************************
-   2. ROI POLYGON
-*******************************************************/
+/*********************************************************
+   2. ROI (BOUNDARY POLYGON)
+**********************************************************/
 const roiCoords = [
   [10.543880176744038, -85.59765362456451],
   [10.419983389530952, -85.59765362456451],
@@ -62,40 +64,48 @@ roiLayer = L.polygon(roiCoords, {
 layerControl.addOverlay(roiLayer, "ROI");
 
 
-/*******************************************************
-   3. LOAD TIFF "Mean_RVI_2025.tif" FROM GITHUB
-*******************************************************/
+/*********************************************************
+   3. LOAD THE RVI TIFF FROM GITHUB PAGES
+**********************************************************/
+const rviUrl = "https://palfangulo.github.io/WebGISMapping/maps/RVI/Mean_RVI_2025_20m.tif";
 
-// RAW GitHub URL:
-const rviUrl =
-  "https://raw.githubusercontent.com/palfangulo/WebGISMapping/main/maps/RVI/Mean_RVI_2025.tif";
-
-// Load TIFF
 fetch(rviUrl)
-  .then(r => r.arrayBuffer())
-  .then(buffer => georaster = parseGeoraster(buffer))
-  .then(georaster => {
+  .then(response => response.arrayBuffer())
+  .then(arrayBuffer => georaster(arrayBuffer))
+  .then(georasterObj => {
 
-    // Color scale for RVI
-    const rviOptions = {
-      pixelValuesToColorFn: function(value) {
-        return plotty.colorScaleToColor("viridis", value, 0, 1);
-      },
-      resolution: 256,
-      opacity: 0.85
-    };
+    // RVI is between 0 and 1
+    const rviMin = 0;
+    const rviMax = 1;
 
     rviLayer = new GeoRasterLayer({
-      georaster: georaster,
-      ...rviOptions
+      georaster: georasterObj,
+      opacity: 0.85,
+      pixelValuesToColorFn: (value) => {
+        
+        if (value === null) return null;
+
+        const v = (value - rviMin) / (rviMax - rviMin);
+        const colorScale = [
+          [0,   "blue"],
+          [0.5, "green"],
+          [1,   "yellow"]
+        ];
+
+        if (v <= 0) return "blue";
+        if (v >= 1) return "yellow";
+        if (v < 0.5) return "blue";
+        if (v === 0.5) return "green";
+        return "yellow";
+      }
     });
 
     rviLayer.addTo(map);
     layerControl.addOverlay(rviLayer, "RVI");
 
-    map.fitBounds(rviLayer.getBounds());
+    console.log("RVI TIFF loaded successfully");
   })
-  .catch(err => console.error("TIFF load error:", err));
+  .catch(err => console.error("Error loading TIFF:", err));
 
 </script>
 
