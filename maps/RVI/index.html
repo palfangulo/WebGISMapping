@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- georaster -->
+<!-- GeoRaster -->
 <script src="https://unpkg.com/georaster/dist/georaster.browser.min.js"></script>
 <script src="https://unpkg.com/georaster-layer-for-leaflet/dist/georaster-layer-for-leaflet.min.js"></script>
 
@@ -46,7 +46,7 @@ const layerControl = L.control.layers(
 
 
 /*********************************************************
-   2. ROI (BOUNDARY POLYGON)
+   2. ROI POLYGON (correct Leaflet lat/lng structure)
 **********************************************************/
 const roiCoords = [
   [10.543880176744038, -85.59765362456451],
@@ -65,48 +65,58 @@ layerControl.addOverlay(roiLayer, "ROI");
 
 
 /*********************************************************
-   3. LOAD THE RVI TIFF FROM GITHUB PAGES
+   3. LOAD RVI TIFF FROM GITHUB PAGES
 **********************************************************/
-const rviUrl = "https://palfangulo.github.io/WebGISMapping/maps/RVI/Mean_RVI_2025_20m.tif";
+const rviUrl =
+  "https://palfangulo.github.io/WebGISMapping/maps/RVI/Mean_RVI_2025_20m.tif";
 
 fetch(rviUrl)
   .then(response => response.arrayBuffer())
   .then(arrayBuffer => georaster(arrayBuffer))
   .then(georasterObj => {
 
-    // RVI is between 0 and 1
-    const rviMin = 0;
-    const rviMax = 1;
+    console.log("GeoRaster loaded:", georasterObj);
+
+    const rviMin = 0.15;    // adjust if needed
+    const rviMax = 0.85;
+
+    // Continuous color interpolation
+    function interpolateColor(value) {
+      if (value <= rviMin) return "blue";
+      if (value >= rviMax) return "yellow";
+
+      const t = (value - rviMin) / (rviMax - rviMin);
+
+      // Blue → Green → Yellow gradient
+      if (t < 0.5) {
+        const f = t / 0.5;
+        return `rgb(${0 * (1-f) + 0 * f}, ${0 * (1-f) + 255 * f}, 255)`; // blue→green
+      } else {
+        const f = (t - 0.5) / 0.5;
+        return `rgb(${0 * (1-f) + 255 * f}, 255, 0)`; // green→yellow
+      }
+    }
 
     rviLayer = new GeoRasterLayer({
       georaster: georasterObj,
       opacity: 0.85,
-      pixelValuesToColorFn: (value) => {
-        
-        if (value === null) return null;
-
-        const v = (value - rviMin) / (rviMax - rviMin);
-        const colorScale = [
-          [0,   "blue"],
-          [0.5, "green"],
-          [1,   "yellow"]
-        ];
-
-        if (v <= 0) return "blue";
-        if (v >= 1) return "yellow";
-        if (v < 0.5) return "blue";
-        if (v === 0.5) return "green";
-        return "yellow";
+      resolution: 128, // speed optimization
+      pixelValuesToColorFn: (values) => {
+        const v = values[0];
+        if (v === null || isNaN(v)) return null;
+        return interpolateColor(v);
       }
     });
 
     rviLayer.addTo(map);
     layerControl.addOverlay(rviLayer, "RVI");
 
+    // Fit map to raster bounds
+    map.fitBounds(rviLayer.getBounds());
+
     console.log("RVI TIFF loaded successfully");
   })
-  .catch(err => console.error("Error loading TIFF:", err));
-
+  .catch(err => console.error("TIFF load error:", err));
 </script>
 
 </body>
