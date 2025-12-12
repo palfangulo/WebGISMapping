@@ -67,8 +67,7 @@ layerControl.addOverlay(roiLayer, "ROI");
 /*********************************************************
    3. LOAD RVI TIFF FROM GITHUB PAGES
 **********************************************************/
-const rviUrl =
-  "https://palfangulo.github.io/WebGISMapping/maps/RVI/Mean_RVI_2025_20m.tif";
+const rviUrl = "https://palfangulo.github.io/WebGISMapping/maps/RVI/Mean_RVI_2025_20m_COG.tif";
 
 fetch(rviUrl)
   .then(response => response.arrayBuffer())
