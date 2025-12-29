@@ -31,17 +31,16 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
-  // 1️⃣ Initialize the Leaflet map
+  // 1️⃣ Initialize the map
   var map = L.map('map').setView([8.8, -83.6], 8);
 
-  // 2️⃣ Add OSM basemap
+  // 2️⃣ Add an OpenStreetMap basemap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // 3️⃣ Load Mangrove Height dynamically from your backend
+  // 3️⃣ Load your dynamic GEE tiles
   fetch('https://gee-mapid-api.onrender.com/mangrove-height')
     .then(res => res.json())
     .then(data => {
@@ -57,6 +56,7 @@
 
   // 4️⃣ Add a legend
   var legend = L.control({ position: 'bottomleft' });
+
   legend.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend');
     div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
@@ -66,6 +66,7 @@
     div.innerHTML += '<i style="background:#d73027"></i>22–30+<br>';
     return div;
   };
+
   legend.addTo(map);
 </script>
 
