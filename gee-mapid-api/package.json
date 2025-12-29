@@ -1,0 +1,12 @@
+{
+  "name": "gee-mapid-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google/earthengine": "^0.1.356",
+    "express": "^4.18.2"
+  }
+}
