@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Canopy Height – Costa Rica</title>
+  <title>Mangrove Height – Costa Rica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet -->
@@ -14,16 +14,14 @@
     .legend {
       background: white;
       padding: 10px;
-      line-height: 18px;
-      color: #333;
       font-size: 14px;
+      line-height: 18px;
     }
     .legend i {
       width: 18px;
       height: 18px;
       float: left;
       margin-right: 8px;
-      opacity: 0.9;
     }
   </style>
 </head>
@@ -32,20 +30,51 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script>
-fetch('https://gee-mapid-api.onrender.com/mangrove-height')
-  .then(res => res.json())
-  .then(data => {
-    L.tileLayer(
-      `https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/${data.mapid}/tiles/{z}/{x}/{y}?token=${data.token}`,
-      {
-        opacity: 0.9,
-        attribution: 'Mangrove Height © Meta/WRI + GMW'
-      }
-    ).addTo(map);
-  });
-</script>
 
+<script>
+  // ===============================
+  // Initialize map (THIS WAS MISSING)
+  // ===============================
+  var map = L.map('map').setView([8.8, -83.6], 8);
+
+  // Basemap
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // ===============================
+  // Load Mangrove Height from GEE backend
+  // ===============================
+  fetch('https://gee-mapid-api.onrender.com/mangrove-height')
+    .then(res => res.json())
+    .then(data => {
+      L.tileLayer(
+        `https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/${data.mapid}/tiles/{z}/{x}/{y}?token=${data.token}`,
+        {
+          opacity: 0.9,
+          attribution: 'Mangrove Height © Meta/WRI + GMW'
+        }
+      ).addTo(map);
+    })
+    .catch(err => console.error('GEE load error:', err));
+
+  // ===============================
+  // Legend
+  // ===============================
+  var legend = L.control({ position: 'bottomleft' });
+
+  legend.onAdd = function () {
+    var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
+    div.innerHTML += '<i style="background:#2166ac"></i>0–7<br>';
+    div.innerHTML += '<i style="background:#1a9850"></i>7–15<br>';
+    div.innerHTML += '<i style="background:#fee08b"></i>15–22<br>';
+    div.innerHTML += '<i style="background:#d73027"></i>22–30+<br>';
+    return div;
+  };
+
+  legend.addTo(map);
+</script>
 
 </body>
 </html>
