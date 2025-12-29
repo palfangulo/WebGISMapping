@@ -1,36 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Costa Rica Canopy Height WebGIS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <title>Costa Rica – Canopy Height WebGIS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <!-- Mapbox GL -->
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
 
   <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-    }
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
 
     .legend {
+      position: absolute;
+      bottom: 30px;
+      left: 10px;
       background: white;
       padding: 10px;
       font-size: 12px;
       line-height: 18px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
     }
 
-    .legend i {
-      width: 18px;
-      height: 18px;
-      float: left;
-      margin-right: 8px;
-      opacity: 0.8;
+    .legend div {
+      display: flex;
+      align-items: center;
+    }
+
+    .legend span {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      display: inline-block;
     }
   </style>
 </head>
@@ -38,45 +41,32 @@
 <body>
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="legend">
+  <strong>Canopy Height (m)</strong>
+  <div><span style="background:blue"></span>0 – 7.5</div>
+  <div><span style="background:green"></span>7.5 – 15</div>
+  <div><span style="background:yellow"></span>15 – 22.5</div>
+  <div><span style="background:red"></span>22.5 – 30</div>
+</div>
 
 <script>
-  // =====================
-  // MAP INITIALIZATION
-  // =====================
-  var map = L.map('map').setView([9.9, -84.0], 8);
+  // 🔑 Mapbox token
+  mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';
 
-  // Base map
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  // 🗺️ Initialize map
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+    center: [-84.0, 9.9],
+    zoom: 7
+  });
 
-  // =====================
-  // GEE CANOPY HEIGHT
-  // =====================
-  var canopyHeight = L.tileLayer(
-    'https://earthengine.googleapis.com/v1/projects/earthengine-legacy/maps/YOUR_MAPID/tiles/{z}/{x}/{y}?token=YOUR_TOKEN',
-    {
-      attribution: 'Meta/WRI Canopy Height | ESA WorldCover | GEE',
-      maxZoom: 19
-    }
-  ).addTo(map);
+  map.addControl(new mapboxgl.NavigationControl());
+  map.addControl(new mapboxgl.FullscreenControl());
 
-  // =====================
-  // LEGEND
-  // =====================
-  var legend = L.control({position: 'bottomleft'});
-  legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += '<b>Canopy Height (m)</b><br>';
-    div.innerHTML += '<i style="background:blue"></i>0–7.5<br>';
-    div.innerHTML += '<i style="background:green"></i>7.5–15<br>';
-    div.innerHTML += '<i style="background:yellow"></i>15–22.5<br>';
-    div.innerHTML += '<i style="background:red"></i>22.5–30<br>';
-    return div;
-  };
-  legend.addTo(map);
-</script>
-
-</body>
-</html>
+  // 🌳 Add GEE Canopy Height layer
+  map.on('load', () => {
+    map.addSource('canopy-height', {
+      type: 'raster',
+      tiles: [
+        'https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/f5da067e53f2ff90cb6c8c9032c12de8-86a0f2ed8374cef6494f48f1dd64fe4f/tiles/{z}/{x}/{y}'
