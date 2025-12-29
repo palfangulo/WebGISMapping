@@ -2,26 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mangrove Height – Costa Rica</title>
+  <title>Mangrove Canopy Height – Costa Rica</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
 
   <style>
     body { margin: 0; }
     #map { height: 100vh; width: 100%; }
+
     .legend {
       background: white;
       padding: 10px;
-      font-size: 14px;
       line-height: 18px;
+      font-size: 14px;
+      color: #333;
     }
     .legend i {
       width: 18px;
       height: 18px;
       float: left;
       margin-right: 8px;
+      opacity: 0.9;
     }
   </style>
 </head>
@@ -29,42 +35,48 @@
 
 <div id="map"></div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
   // ===============================
-  // Initialize map (THIS WAS MISSING)
+  // 1️⃣ Initialize map (REQUIRED)
   // ===============================
-  var map = L.map('map').setView([8.8, -83.6], 8);
+  const map = L.map('map').setView([8.8, -83.6], 8);
 
-  // Basemap
+  // ===============================
+  // 2️⃣ Basemap
+  // ===============================
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+    attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
   // ===============================
-  // Load Mangrove Height from GEE backend
+  // 3️⃣ Load Mangrove Height (GEE)
   // ===============================
   fetch('https://gee-mapid-api.onrender.com/mangrove-height')
     .then(res => res.json())
     .then(data => {
-      L.tileLayer(
+
+      const mangroveHeight = L.tileLayer(
         `https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/${data.mapid}/tiles/{z}/{x}/{y}?token=${data.token}`,
         {
           opacity: 0.9,
           attribution: 'Mangrove Height © Meta/WRI + GMW'
         }
-      ).addTo(map);
+      );
+
+      mangroveHeight.addTo(map);
     })
-    .catch(err => console.error('GEE load error:', err));
+    .catch(err => console.error('GEE layer error:', err));
 
   // ===============================
-  // Legend
+  // 4️⃣ Legend
   // ===============================
-  var legend = L.control({ position: 'bottomleft' });
+  const legend = L.control({ position: 'bottomleft' });
 
   legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend');
+    const div = L.DomUtil.create('div', 'legend');
     div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
     div.innerHTML += '<i style="background:#2166ac"></i>0–7<br>';
     div.innerHTML += '<i style="background:#1a9850"></i>7–15<br>';
