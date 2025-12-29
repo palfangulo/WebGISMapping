@@ -33,37 +33,19 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // Initialize map
-  var map = L.map('map').setView([8.872, -83.5553], 8);
-
-  // Basemap
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  // 🔥 GEE Canopy Height Tile Layer
-  var canopyHeight = L.tileLayer(
-    'https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/f5da067e53f2ff90cb6c8c9032c12de8-8801f65c50ab830a57a8f0b910b0f6ed/tiles/{z}/{x}/{y}',
-    {
-      attribution: 'Meta/WRI Canopy Height (1m) | ESA WorldCover | Google Earth Engine'
-    }
-  ).addTo(map);
-
-  // Legend
-  var legend = L.control({ position: 'bottomleft' });
-
-  legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += '<strong>Canopy Height (m)</strong><br>';
-    div.innerHTML += '<i style="background:blue"></i>0–7.5<br>';
-    div.innerHTML += '<i style="background:green"></i>7.5–15<br>';
-    div.innerHTML += '<i style="background:yellow"></i>15–22.5<br>';
-    div.innerHTML += '<i style="background:red"></i>22.5–30<br>';
-    return div;
-  };
-
-  legend.addTo(map);
+fetch('https://gee-mapid-api.onrender.com/mangrove-height')
+  .then(res => res.json())
+  .then(data => {
+    L.tileLayer(
+      `https://earthengine.googleapis.com/v1/projects/ee-palfangulo2/maps/${data.mapid}/tiles/{z}/{x}/{y}?token=${data.token}`,
+      {
+        opacity: 0.9,
+        attribution: 'Mangrove Height © Meta/WRI + GMW'
+      }
+    ).addTo(map);
+  });
 </script>
+
 
 </body>
 </html>
