@@ -27,17 +27,13 @@
     }
 
     .legend i {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  opacity: 1;
-  vertical-align: middle;
-}
-.legend i {
-  background-clip: padding-box;
-}
-
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      vertical-align: middle;
+      background-clip: padding-box;
+    }
   </style>
 </head>
 
@@ -69,6 +65,16 @@
   ).addTo(map);
 
   // ====================================================
+  // COLOR PALETTE (SINGLE SOURCE OF TRUTH)
+  // ====================================================
+  const heightColors = {
+    1: "#2c7bb6", // < 5 m
+    2: "#1a9641", // 5–10 m
+    3: "#ffff33", // 10–20 m
+    4: "#d7191c"  // > 20 m
+  };
+
+  // ====================================================
   // GEE CANOPY HEIGHT TILE LAYER
   // ====================================================
   var canopyHeight = L.tileLayer(
@@ -81,76 +87,69 @@
   );
 
   // ====================================================
-  // GEOJSON: MANGROVE CANOPY HEIGHT CLASSES
+  // GEOJSON: MANGROVE HEIGHT CLASSES
   // ====================================================
   function mangroveStyle(feature) {
-  return {
-    fillColor:
-      feature.properties.MH == 1 ? "#2c7bb6" :
-      feature.properties.MH == 2 ? "#1a9641" :
-      feature.properties.MH == 3 ? "#ffff33" :
-      "#d7191c",
-    stroke: false,
-    fillOpacity: 1
-  };
-}
-
+    return {
+      fillColor: heightColors[feature.properties.MH],
+      stroke: false,
+      fillOpacity: 1
+    };
+  }
 
   function mangrovePopup(feature, layer) {
-    const label =
-      feature.properties.MH == 1 ? "< 5 m" :
-      feature.properties.MH == 2 ? "5–10 m" :
-      feature.properties.MH == 3 ? "10–20 m" :
-      "> 20 m";
+    const labels = {
+      1: "< 5 m",
+      2: "5–10 m",
+      3: "10–20 m",
+      4: "> 20 m"
+    };
 
     layer.bindPopup(
-      "<strong>Mangrove Canopy Height</strong><br>" + label
+      "<strong>Mangrove Canopy Height</strong><br>" +
+      labels[feature.properties.MH]
     );
   }
 
-var mangroveLayer = L.geoJSON(null, {
-  style: mangroveStyle,
-  onEachFeature: mangrovePopup
-}).addTo(map);   // 👈 ADD THIS
+  var mangroveLayer = L.geoJSON(null, {
+    style: mangroveStyle,
+    onEachFeature: mangrovePopup
+  }).addTo(map);
 
-fetch("data/mangrove_canopy_height_classes.geojson")
-  .then(response => response.json())
-  .then(data => {
-    mangroveLayer.addData(data);
-  });
-
+  fetch("data/mangrove_canopy_height_classes.geojson")
+    .then(response => response.json())
+    .then(data => {
+      mangroveLayer.addData(data);
+    });
 
   // ====================================================
   // LAYER CONTROL
   // ====================================================
-  var baseMaps = {
-    "OpenStreetMap": osm
-  };
-
-  var overlayMaps = {
-    "Canopy Height (GEE Raster)": canopyHeight,
-    "Mangrove Height Classes (Vector)": mangroveLayer
-  };
-
-  L.control.layers(baseMaps, overlayMaps, {
-    collapsed: false
-  }).addTo(map);
+  L.control.layers(
+    { "OpenStreetMap": osm },
+    {
+      "Canopy Height (GEE Raster)": canopyHeight,
+      "Mangrove Height Classes (Vector)": mangroveLayer
+    },
+    { collapsed: false }
+  ).addTo(map);
 
   // ====================================================
-  // LEGEND
+  // LEGEND (FIXED)
   // ====================================================
   var legend = L.control({ position: 'bottomleft' });
 
-  llegend.onAdd = function () {
-  var div = L.DomUtil.create('div', 'legend');
-  div.innerHTML =
-    '<strong>Mangrove Height (m)</strong><br>' +
-    '<i style="background:#2c7bb6"></i> < 5 m<br>' +
-    '<i style="background:#1a9641"></i> 5 – 10 m<br>' +
-    '<i style="background:#ffff33"></i> 10 – 20 m<br>' +
-    '<i style="background:#d7191c"></i> > 20 m<br>';
-  return div;
-};
+  legend.onAdd = function () {
+    var div = L.DomUtil.create('div', 'legend');
+    div.innerHTML =
+      '<strong>Mangrove Height (m)</strong><br>' +
+      '<i style="background:' + heightColors[1] + '"></i> < 5 m<br>' +
+      '<i style="background:' + heightColors[2] + '"></i> 5 – 10 m<br>' +
+      '<i style="background:' + heightColors[3] + '"></i> 10 – 20 m<br>' +
+      '<i style="background:' + heightColors[4] + '"></i> > 20 m<br>';
+    return div;
+  };
+
   legend.addTo(map);
 </script>
 
