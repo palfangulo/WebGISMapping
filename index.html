@@ -68,10 +68,10 @@
   // COLOR PALETTE (SINGLE SOURCE OF TRUTH)
   // ====================================================
   const heightColors = {
-    1: "#2c7bb6", // < 5 m
-    2: "#1a9641", // 5–10 m
-    3: "#ffff33", // 10–20 m
-    4: "#d7191c"  // > 20 m
+    1: "#2c7bb6", // < 5 m (Blue)
+    2: "#1a9641", // 5–10 m (Green)
+    3: "#ffff33", // 10–20 m (Yellow)
+    4: "#d7191c"  // > 20 m (Red)
   };
 
   // ====================================================
@@ -84,10 +84,10 @@
       maxZoom: 19,
       opacity: 0.85
     }
-  );
+  ).addTo(map);
 
   // ====================================================
-  // GEOJSON: MANGROVE HEIGHT CLASSES
+  // GEOJSON: MANGROVE CANOPY HEIGHT CLASSES
   // ====================================================
   function mangroveStyle(feature) {
     return {
@@ -120,6 +120,7 @@
     .then(response => response.json())
     .then(data => {
       mangroveLayer.addData(data);
+      map.fitBounds(mangroveLayer.getBounds());
     });
 
   // ====================================================
@@ -128,14 +129,14 @@
   L.control.layers(
     { "OpenStreetMap": osm },
     {
-      "Canopy Height (GEE Raster)": canopyHeight,
+      "Canopy Height (Raster)": canopyHeight,
       "Mangrove Height Classes (Vector)": mangroveLayer
     },
     { collapsed: false }
   ).addTo(map);
 
   // ====================================================
-  // LEGEND (FIXED)
+  // LEGEND (ALWAYS VISIBLE)
   // ====================================================
   var legend = L.control({ position: 'bottomleft' });
 
