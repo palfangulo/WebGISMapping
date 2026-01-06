@@ -27,12 +27,17 @@
     }
 
     .legend i {
-      width: 18px;
-      height: 18px;
-      float: left;
-      margin-right: 8px;
-      opacity: 0.8;
-    }
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  opacity: 1;
+  vertical-align: middle;
+}
+.legend i {
+  background-clip: padding-box;
+}
+
   </style>
 </head>
 
@@ -81,16 +86,14 @@
   function mangroveStyle(feature) {
   return {
     fillColor:
-      feature.properties.MH == 1 ? "#2c7bb6" :  // BLUE  (< 5 m)
-      feature.properties.MH == 2 ? "#1a9641" :  // GREEN (5–10 m)
-      feature.properties.MH == 3 ? "#ffff33" :  // YELLOW (10–20 m)
-      "#d7191c",                                // RED (> 20 m)
-    stroke: false,       // no outline
+      feature.properties.MH == 1 ? "#2c7bb6" :
+      feature.properties.MH == 2 ? "#1a9641" :
+      feature.properties.MH == 3 ? "#ffff33" :
+      "#d7191c",
+    stroke: false,
     fillOpacity: 1
   };
 }
-
-
 
 
   function mangrovePopup(feature, layer) {
@@ -138,21 +141,16 @@ fetch("data/mangrove_canopy_height_classes.geojson")
   // ====================================================
   var legend = L.control({ position: 'bottomleft' });
 
-  legend.onAdd = function () {
+  llegend.onAdd = function () {
   var div = L.DomUtil.create('div', 'legend');
-  div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
-  div.innerHTML += '<i style="background:#2c7bb6"></i> < 5 m<br>';
-  div.innerHTML += '<i style="background:#1a9641"></i> 5 – 10 m<br>';
-  div.innerHTML += '<i style="background:#ffff33"></i> 10 – 20 m<br>';
-  div.innerHTML += '<i style="background:#d7191c"></i> > 20 m<br>';
+  div.innerHTML =
+    '<strong>Mangrove Height (m)</strong><br>' +
+    '<i style="background:#2c7bb6"></i> < 5 m<br>' +
+    '<i style="background:#1a9641"></i> 5 – 10 m<br>' +
+    '<i style="background:#ffff33"></i> 10 – 20 m<br>' +
+    '<i style="background:#d7191c"></i> > 20 m<br>';
   return div;
 };
-  
-.legend i {
-  border-radius: 3px;
-}
-
-
   legend.addTo(map);
 </script>
 
