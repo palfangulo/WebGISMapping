@@ -45,7 +45,7 @@
 
 <script>
   // ====================================================
-  // MAP INITIALIZATION (SAFE ZOOM LEVEL)
+  // MAP INITIALIZATION
   // ====================================================
   var map = L.map('map', {
     minZoom: 6,
@@ -73,20 +73,46 @@
       maxZoom: 19,
       opacity: 0.85
     }
-  ).addTo(map);
+  );
 
   // ====================================================
-  // TILE ERROR DEBUGGING
+  // GEOJSON: MANGROVE CANOPY HEIGHT CLASSES
   // ====================================================
-  canopyHeight.on('tileerror', function (error, tile) {
-    console.error(
-      'Tile error at z/x/y:',
-      tile.coords.z,
-      tile.coords.x,
-      tile.coords.y,
-      error
+  function mangroveStyle(feature) {
+    return {
+      fillColor:
+        feature.properties.MH == 1 ? "#edf8b1" :
+        feature.properties.MH == 2 ? "#7fcdbb" :
+        feature.properties.MH == 3 ? "#41b6c4" :
+        "#2c7fb8",
+      weight: 1,
+      color: "#333",
+      fillOpacity: 0.7
+    };
+  }
+
+  function mangrovePopup(feature, layer) {
+    const label =
+      feature.properties.MH == 1 ? "< 5 m" :
+      feature.properties.MH == 2 ? "5–10 m" :
+      feature.properties.MH == 3 ? "10–20 m" :
+      "> 20 m";
+
+    layer.bindPopup(
+      "<strong>Mangrove Canopy Height</strong><br>" + label
     );
+  }
+
+  var mangroveLayer = L.geoJSON(null, {
+    style: mangroveStyle,
+    onEachFeature: mangrovePopup
   });
+
+  fetch("data/mangrove_canopy_height_classes.geojson")
+    .then(response => response.json())
+    .then(data => {
+      mangroveLayer.addData(data);
+    });
 
   // ====================================================
   // LAYER CONTROL
@@ -96,7 +122,8 @@
   };
 
   var overlayMaps = {
-    "Canopy Height (Tree Cover Only)": canopyHeight
+    "Canopy Height (GEE Raster)": canopyHeight,
+    "Mangrove Height Classes (Vector)": mangroveLayer
   };
 
   L.control.layers(baseMaps, overlayMaps, {
@@ -110,11 +137,11 @@
 
   legend.onAdd = function () {
     var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += '<strong>Canopy Height (m)</strong><br>';
-    div.innerHTML += '<i style="background:blue"></i>0 – 7.5<br>';
-    div.innerHTML += '<i style="background:green"></i>7.5 – 15<br>';
-    div.innerHTML += '<i style="background:yellow"></i>15 – 22.5<br>';
-    div.innerHTML += '<i style="background:red"></i>22.5 – 30<br>';
+    div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
+    div.innerHTML += '<i style="background:#edf8b1"></i>< 5 m<br>';
+    div.innerHTML += '<i style="background:#7fcdbb"></i>5 – 10 m<br>';
+    div.innerHTML += '<i style="background:#41b6c4"></i>10 – 20 m<br>';
+    div.innerHTML += '<i style="background:#2c7fb8"></i>> 20 m<br>';
     return div;
   };
 
