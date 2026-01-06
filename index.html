@@ -103,16 +103,17 @@
     );
   }
 
-  var mangroveLayer = L.geoJSON(null, {
-    style: mangroveStyle,
-    onEachFeature: mangrovePopup
+var mangroveLayer = L.geoJSON(null, {
+  style: mangroveStyle,
+  onEachFeature: mangrovePopup
+}).addTo(map);   // 👈 ADD THIS
+
+fetch("data/mangrove_canopy_height_classes.geojson")
+  .then(response => response.json())
+  .then(data => {
+    mangroveLayer.addData(data);
   });
 
-  fetch("data/mangrove_canopy_height_classes.geojson")
-    .then(response => response.json())
-    .then(data => {
-      mangroveLayer.addData(data);
-    });
 
   // ====================================================
   // LAYER CONTROL
