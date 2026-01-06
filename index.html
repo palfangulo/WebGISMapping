@@ -81,14 +81,15 @@
   function mangroveStyle(feature) {
   return {
     fillColor:
-      feature.properties.MH == 1 ? "#2166ac" :
-      feature.properties.MH == 2 ? "#1a9850" :
-      feature.properties.MH == 3 ? "#fee08b" :
-      "#d73027",
-    stroke: false,
-    fillOpacity: 1   // 👈 IMPORTANT
+      feature.properties.MH == 1 ? "#2c7bb6" :  // BLUE  (< 5 m)
+      feature.properties.MH == 2 ? "#1a9641" :  // GREEN (5–10 m)
+      feature.properties.MH == 3 ? "#ffff33" :  // YELLOW (10–20 m)
+      "#d7191c",                                // RED (> 20 m)
+    stroke: false,       // no outline
+    fillOpacity: 1
   };
 }
+
 
 
 
@@ -138,14 +139,19 @@ fetch("data/mangrove_canopy_height_classes.geojson")
   var legend = L.control({ position: 'bottomleft' });
 
   legend.onAdd = function () {
-    var div = L.DomUtil.create('div', 'legend');
-    div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
-    div.innerHTML += '<i style="background:#edf8b1"></i>< 5 m<br>';
-    div.innerHTML += '<i style="background:#7fcdbb"></i>5 – 10 m<br>';
-    div.innerHTML += '<i style="background:#41b6c4"></i>10 – 20 m<br>';
-    div.innerHTML += '<i style="background:#2c7fb8"></i>> 20 m<br>';
-    return div;
-  };
+  var div = L.DomUtil.create('div', 'legend');
+  div.innerHTML += '<strong>Mangrove Height (m)</strong><br>';
+  div.innerHTML += '<i style="background:#2c7bb6"></i> < 5 m<br>';
+  div.innerHTML += '<i style="background:#1a9641"></i> 5 – 10 m<br>';
+  div.innerHTML += '<i style="background:#ffff33"></i> 10 – 20 m<br>';
+  div.innerHTML += '<i style="background:#d7191c"></i> > 20 m<br>';
+  return div;
+};
+  
+.legend i {
+  border-radius: 3px;
+}
+
 
   legend.addTo(map);
 </script>
