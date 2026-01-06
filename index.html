@@ -79,17 +79,17 @@
   // GEOJSON: MANGROVE CANOPY HEIGHT CLASSES
   // ====================================================
   function mangroveStyle(feature) {
-    return {
-      fillColor:
-        feature.properties.MH == 1 ? "#edf8b1" :
-        feature.properties.MH == 2 ? "#7fcdbb" :
-        feature.properties.MH == 3 ? "#41b6c4" :
-        "#2c7fb8",
-      weight: 1,
-      color: "#333",
-      fillOpacity: 0.7
-    };
-  }
+  return {
+    fillColor:
+      feature.properties.MH == 1 ? "#edf8b1" :
+      feature.properties.MH == 2 ? "#7fcdbb" :
+      feature.properties.MH == 3 ? "#41b6c4" :
+      "#2c7fb8",
+    stroke: false,     // ❌ NO outline
+    fillOpacity: 0.7
+  };
+}
+
 
   function mangrovePopup(feature, layer) {
     const label =
